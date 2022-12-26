@@ -3,7 +3,7 @@ Transformer 이후 다양한 모델은 NLP Task에서 획기적인 성능을 보
 
 [네이버 쇼핑, Steam 리뷰](https://github.com/bab2min/corpus/tree/master/sentiment), [네이버 영화 리뷰](https://github.com/e9t/nsmc) Dateset으로 한국어 감정분석 Binary Classification Task를 진행합니다. 해당 Dateset으로 FineTuning한 Transformer base Teacher Model로 BiLSTM를 Knowledge Distillation합니다. Distilling 과정에서 Teacher Model은 logits 값만 사용하기 때문에, 대부분의 모델(`BERT, ELECTRA, BART, GPT, XLNet, T5, ETC...`)을 사용할 수 있습니다.
 
-Distilling 과정에서 epoch마다 Teacher Model output을 Inference 한다면, 많은 시간이 소요됩니다. 이를 방지하기 위해, 사전에 Dataset index 별 Teacher Model의 logits 값을 가진 dictionary를 만듭니다. 이를 이용하여, train 속도가 수십 ~ 수천 배 이상 빨라집니다.
+Distilling 과정에서 epoch마다 Teacher Model output을 Inference 한다면, 많은 시간이 소요됩니다. 이를 방지하기 위해, 사전에 Dataset index 별 Teacher Model의 logits 값을 가진 dictionary를 만듭니다. 이를 이용하여, train 속도가 수십 ~ 수백 배 이상 빨라집니다.
 
 ## How to Use
 ```
