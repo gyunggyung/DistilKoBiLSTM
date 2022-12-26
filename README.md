@@ -5,7 +5,7 @@ Transformer 이후 다양한 모델은 NLP Task에서 획기적인 성능을 보
 
 Distilling 과정에서 epoch마다 Teacher Model output을 Inference 한다면, 많은 시간이 소요됩니다. 이를 방지하기 위해, 사전에 Dataset index 별 Teacher Model의 logits 값을 가진 dictionary를 만듭니다. 이를 이용하여, train 속도가 수십 ~ 수천 배 이상 빨라집니다.
 
-## Use
+## How to Use
 ```
 git clone https://github.com/gyunggyung/DistilKoBiLSTM.git
 ```
@@ -28,12 +28,31 @@ setInterval(ClickConnect,1000*60);
 
 ```
 
-## tokenizer
+### Hyperparameter tuning
+`main.ipynb`에서 다양한 Hyperparameter를 설정할 수 있습니다. 아래 부분을 수정하여, 사용할 수 있습니다.
+
+``` python
+vocab_size = 3000
+hidden_dim = 128
+embedding_dim = 64
+loss_rate = 0.1
+temperature = 2
+train_epoch = 30
+
+teacher_path = "teacher_model/KoELECTRA-Small-v3/"
+
+distil_trainer = Distil_Trainer(hidden_dim = hidden_dim, embedding_dim = embedding_dim, lstm_num_layers = 1, train_epoch = train_epoch,
+                                out_put_dir = "distil_scheduler/vocab_size_{}_loss_rate_{}_temperature_{}/StepLR".format(str(vocab_size), str(int(loss_rate * 100)), temperature), tokenizer = tokenizer,
+                                teacher_output = teacher_output, loss_rate = loss_rate, temperature = temperature)
+
+```
+
+### tokenizer
 적은 Parameters를 가진 Student Model은, tokenizer vocab size에 따라서, Model Size가 크게 변합니다. 해당 Repository는 한국어 감정분석 Dataset으로 [다양한 vocab size(2000~9000)](https://github.com/gyunggyung/DistilKoBiLSTM/tree/main/tokenizer)를 만들었습니다. Hugging Face BertWordPieceTokenizer로 tokenizer를 만들었습니다.
 
-BPE, SentencePiece, 형태소 분석기 등 다른 방식의 tokenizer를 만들거나, 다른 Dataset을 사용할 수 있습니다. `tokenizer/` directory에 `vocab_size_n` 형식으로 만드는 것을 추천합니다. 
+BPE, SentencePiece, 형태소 분석기 등 다른 방식의 tokenizer를 만들거나, 다른 Dataset을 사용할 수 있습니다. tokenizer를 저장할 때는 `tokenizer/` directory에 `vocab_size_n` 형식으로 만드는 것을 추천합니다. 
 
-tokenizer 종류에 따라서, `utils.py` `Line 21~23` 부분을 수정해야 할 수 있습니다. tokenizer는 문자열로 구성된 list 형태의 sentences를 입력받아, tensor 형태로 반환합니다.
+tokenizer 종류에 따라서, `utils.py` `Line 21~23` 부분을 수정해야 할 수도 있습니다. tokenizer는 문자열로 구성된 list 형태의 sentences를 입력받아, tensor 형태로 반환합니다.
 
 ```python
         else:
@@ -41,20 +60,47 @@ tokenizer 종류에 따라서, `utils.py` `Line 21~23` 부분을 수정해야 �
         X = tokens["input_ids"]
 ```
 
+## Result
+
+| Model                    | Total Parameters | Model Size |   Acc |
+| ------------------------ | ---------------: | ---------: | ----: |
+| `BERT-Large`             |        335174458 |      1.34G |     - |
+| `BERT-Base-Multilingual` |        177974523 |       714M | 87.54 |
+| `KoBERT`                 |         92186880 |       369M | 90.26 |
+| `KoELECTRA-Base-v3`      |        112330752 |       452M | 90.98 |
+| `KoELECTRA-Small-v3`     |         14056192 |      56.6M | 89.90 |
+| `DistilKoBiLSTM-Base`    |           391170 |       1.5M | 88.20 |
+| `DistilKoBiLSTM-Smail`   |           146434 |      547KB | 87.17 |
+
+- 실험에 사용된 `DistilKoBiLSTM`는 `KoELECTRA-Small-v3`을 Teacher Model로 사용했습니다.
+- `DistilKoBiLSTM-base` 기준 각 모델 별 Parameter Size 감축: `BERT-Large` 869배, `BERT-Base-Multilingual` 455배 ,`KoBERT` 235배, `KoELECTRA-Base-v3` 287배, `KoELECTRA-Small-v3` 36배. 엄청난 크기 차이 속에서, 최대 2.78%의 Acc 차이를 보입니다. 오히려 성능이 더 좋은 경우도 있습니다.
+
+
+### Hyperparameter and Acc and Train Time
+
+| Model                    | vocab size | hidden dim | embedding dim | loss rate | temperature |   Acc | Step | Train Time |
+| ------------------------ | ---------: | ---------: | ------------: | --------: | ----------: | ----: | ---: | ---------: |
+| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.1 |           1 | 88.20 |   30 |   00:50:29 |
+| `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.1 |           2 | 87.17 |   30 |   00:44:34 |
+| `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.1 |           1 | 87.14 |   30 |   00:44:41 |
+
 ## Todo
 - [ ] Add Relu
 - [ ] Add Attention
 - [ ] Clean model path
 - [ ] Save BiLSTM Hyperparameter
+- [ ] checkpoint Restore and continue training
 - [ ] Use CPU
 - [ ] Make class Simple Trainer
-- [ ] Write Acc
+- [X] Write Acc
 - [ ] Edit TensorBoard
 - [ ] Make distil.py file
-- [ ] Web Serving
+- [ ] Data Augmentation and Additional Distilling
+- [ ] Web Serving Upload
 - [ ] Edit get_teacher_output Function
 
 ### Distilling Teacher Model
+- [ ] KoELECTRA-Base-v3(Need to learn again)
 - [ ] KoBERT
 - [ ] DistilKoBERT
 - [ ] KLUE-RoBERTa
@@ -77,3 +123,4 @@ tokenizer 종류에 따라서, `utils.py` `Line 21~23` 부분을 수정해야 �
 - [monologg/DistilKoBERT](https://github.com/monologg/DistilKoBERT)
 - [HyejinWon/pytorch-nsmc-classification](https://github.com/HyejinWon/pytorch-nsmc-classification)
 - [Google Colab 런타임 연결 끊김 방지](https://bryan7.tistory.com/1077)
+- [범용적인 감정 분석(극성 분석)은 가능할까](https://bab2min.tistory.com/657)
