@@ -5,8 +5,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from modeling_bilstm import BiLSTM
 from torch.utils.tensorboard import SummaryWriter
+from modeling_bilstm import BiLSTM
 
 class Distil_Trainer():
     def __init__(self, input_dim = 8002, hidden_dim = 128, embedding_dim = 64, lstm_num_layers = 1, dropout = 0.3, tokenizer = None,
@@ -33,7 +33,7 @@ class Distil_Trainer():
         self.temperature = temperature
         self.train_epoch = train_epoch
         self.tb_suffix = "{}_input_{}_hidden_{}_embedding_{}_loss_rate_{}".format("_".join(out_put_dir.split("/")), input_dim, hidden_dim, embedding_dim, int(loss_rate * 100))
-        self.tb_writer = SummaryWriter(log_dir = "/content/gdrive/MyDrive/DistilkoBiLSTM/logs", filename_suffix = self.tb_suffix) #(log_dir = "/content/gdrive/MyDrive/DistilkoBiLSTM/logs", filename_suffix = self.tb_suffix)
+        self.tb_writer = SummaryWriter(log_dir = "/content/gdrive/MyDrive/DistilKoBiLSTM/logs", filename_suffix = self.tb_suffix)
         self.loss_option = loss_option
 
     def __distil_loss(self, output, teacher_prob, real_label):
@@ -179,3 +179,93 @@ class Distil_Trainer():
         input_ids = tokens["input_ids"].to("cuda")
         prediction = self.model(input_ids)
         return prediction
+
+import pandas as pd
+from copy import deepcopy
+from utils import Dataset, get_teacher_output
+from transformers import BertTokenizerFast
+
+class Main_train():
+    def __init__(self, vocab_size, batch_size, hidden_dim, embedding_dim, loss_rate, temperature, train_epoch, teacher_path):
+        self.vocab_size = vocab_size
+        self.batch_size = batch_size
+        self.hidden_dim = hidden_dim
+        self.embedding_dim = embedding_dim
+        self.loss_rate = loss_rate
+        self.temperature = temperature
+        self.train_epoch = train_epoch
+        self.teacher_path = teacher_path
+
+    def __get_hyperparameter(self):
+        vocab_size = self.vocab_size
+        batch_size = self.batch_size
+        hidden_dim = self.hidden_dim
+        embedding_dim = self.embedding_dim
+        loss_rate = self.loss_rate
+        temperature = self.temperature
+        train_epoch = self.train_epoch
+        teacher_path = self.teacher_path
+        return vocab_size, batch_size, hidden_dim, embedding_dim, loss_rate, temperature, train_epoch, teacher_path
+
+    def load_data(self):
+        vocab_size, batch_size = self.vocab_size, self.batch_size
+        df = pd.read_csv("dataset.csv")
+        tokenizer = BertTokenizerFast(vocab_file = "tokenizer/vocab_size_{}/vocab.txt".format(str(vocab_size)), lowercase=False, strip_accents=False)
+        dataset = Dataset(tokenizer, tokenizer_type = "BertTokenizerFast", batch_size = batch_size)
+        train_iter, test_iter, valid_iter = dataset.load_data(df)
+        return train_iter, test_iter, valid_iter, tokenizer
+
+    def only_train(self, train_iter, valid_iter, test_iter, tokenizer):
+        vocab_size, batch_size, hidden_dim, embedding_dim, loss_rate, temperature, train_epoch, teacher_path = self.__get_hyperparameter()
+        teacher_output = get_teacher_output(teacher_path)
+        print("vocab_size : ", vocab_size)
+        print("loss_rate : ", loss_rate)
+        print("temperature: ", temperature)
+        distil_trainer = Distil_Trainer(hidden_dim = hidden_dim, embedding_dim = embedding_dim, lstm_num_layers = 1, train_epoch = train_epoch,
+                                        out_put_dir = "distil/vocab_size_{}_loss_rate_{}_temperature_{}/".format(str(vocab_size), str(int(loss_rate * 100)), temperature), tokenizer = tokenizer,
+                                        teacher_output = teacher_output, loss_rate = loss_rate, temperature = temperature)
+        distil_trainer.trainer(train_iter, valid_iter, test_iter)
+        distil_trainer.tb_writer.flush()
+        distil_trainer.tb_writer.close()
+
+    def train_list_hyperparameter(self, hyperparameter_list):
+        if type(hyperparameter_list[0]) is int:
+            vocab_size_list = [hyperparameter_list[0]]
+        else:
+            vocab_size_list = hyperparameter_list[0]
+
+        if type(hyperparameter_list[1]) is int:
+            batch_size_list = [hyperparameter_list[1]]
+        else:
+            batch_size_list = hyperparameter_list[1]
+
+        hyperparameter_list = hyperparameter_list[2:]
+        flatten_list = [deepcopy(hyperparameter_list)]
+        for i, parameter in enumerate(hyperparameter_list):
+            if type(parameter) is list:
+                now_list = []
+                n = len(parameter)
+                for j, sub_flatten_list in enumerate(flatten_list):
+                    for k in range(n):
+                        now_list.append(deepcopy(sub_flatten_list))
+                        now_list[j * n + k][i] = parameter[k]
+                flatten_list = now_list
+
+        for vocab_size in vocab_size_list:
+            for batch_size in batch_size_list:
+                self.vocab_size = vocab_size
+                self.batch_size = batch_size
+                train_iter, test_iter, valid_iter, tokenizer = self.load_data()
+                for parameters in flatten_list:
+                    self.hidden_dim, self.embedding_dim, self.loss_rate, self.temperature, self.train_epoch, self.teacher_path = parameters
+                    self.only_train(train_iter, valid_iter, test_iter, tokenizer)
+                del [[train_iter, test_iter, valid_iter, tokenizer]]
+
+    def train(self):
+        hyperparameter_list = list(self.__get_hyperparameter())
+        for parameter in hyperparameter_list:
+            if type(parameter) is list:
+                self.train_list_hyperparameter(hyperparameter_list)
+                return
+        train_iter, test_iter, valid_iter, tokenizer = self.load_data()
+        self.only_train(train_iter, valid_iter, test_iter, tokenizer)

@@ -3,7 +3,6 @@ import datetime
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 from tokenizers import BertWordPieceTokenizer
-from transformers import BertTokenizer
 from sklearn.model_selection import train_test_split
 
 class Dataset():

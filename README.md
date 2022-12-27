@@ -9,7 +9,9 @@ Distilling 과정에서 epoch마다 Teacher Model output을 Inference 한다면,
 ```
 git clone https://github.com/gyunggyung/DistilKoBiLSTM.git
 ```
-위 명령어로 해당 Repository를 clone한 후, [Google Drive](https://drive.google.com/drive/my-drive)에 넣습니다. `main.ipynb` 파일을 Colab으로 실행합니다. Colab은 장시간 사용하지 않을 경우 Runtime이 끊어질 수도 있습니다. 이를 대비하기 위해, 개발자 모드(F12) Console에서 아래 코드를 붙여 넣는 것을 추천합니다.
+위 명령어로 해당 Repository를 clone한 후, [Google Drive](https://drive.google.com/drive/my-drive)에 넣습니다. `main.ipynb` 파일을 Colab으로 실행합니다. Colab에서 Repository의 경로는 `/content/gdrive/MyDrive/DistilKoBiLSTM` 입니다.
+
+Colab은 장시간 사용하지 않을 경우 Runtime이 끊어질 수도 있습니다. 이를 대비하기 위해, 개발자 모드(F12) Console에서 아래 코드를 붙여 넣는 것을 추천합니다.
 
 ### Runtime Disconnection Prevention
 ``` javascript
@@ -29,22 +31,17 @@ setInterval(ClickConnect,1000*60);
 ```
 
 ### Hyperparameter tuning
-`main.ipynb`에서 다양한 Hyperparameter를 설정할 수 있습니다. 아래 부분을 수정하여, 사용할 수 있습니다.
+`main.ipynb`에서 다양한 Hyperparameter를 설정할 수 있습니다. 아래 부분을 수정하여, 사용할 수 있습니다. hyperparameter dictionary의 value는 list 형태로 수정할 수도 있습니다. 그렇게 한다면, list 안에 있는 모든 hyperparameter로 학습을 진행합니다.
 
 ``` python
-vocab_size = 3000
-hidden_dim = 128
-embedding_dim = 64
-loss_rate = 0.1
-temperature = 2
-train_epoch = 30
-
-teacher_path = "teacher_model/KoELECTRA-Small-v3/"
-
-distil_trainer = Distil_Trainer(hidden_dim = hidden_dim, embedding_dim = embedding_dim, lstm_num_layers = 1, train_epoch = train_epoch,
-                                out_put_dir = "distil_scheduler/vocab_size_{}_loss_rate_{}_temperature_{}/StepLR".format(str(vocab_size), str(int(loss_rate * 100)), temperature), tokenizer = tokenizer,
-                                teacher_output = teacher_output, loss_rate = loss_rate, temperature = temperature)
-
+hyperparameter = {"vocab_size": 3000,
+                  "batch_size": 64,
+                  "hidden_dim": 64,
+                  "embedding_dim": 32,
+                  "loss_rate": 0.1,
+                  "temperature": 3,
+                  "train_epoch": 30,
+                  "teacher_path": "teacher_model/KoELECTRA-Small-v3/"}
 ```
 
 ### tokenizer
@@ -52,13 +49,7 @@ distil_trainer = Distil_Trainer(hidden_dim = hidden_dim, embedding_dim = embeddi
 
 BPE, SentencePiece, 형태소 분석기 등 다른 방식의 tokenizer를 만들거나, 다른 Dataset을 사용할 수 있습니다. tokenizer를 저장할 때는 `tokenizer/` directory에 `vocab_size_n` 형식으로 만드는 것을 추천합니다. 
 
-tokenizer 종류에 따라서, `utils.py` `Line 21~23` 부분을 수정해야 할 수도 있습니다. tokenizer는 문자열로 구성된 list 형태의 sentences를 입력받아, tensor 형태로 반환합니다.
-
-```python
-        else:
-            tokens = self.tokenizer(sentences, return_tensors = "pt", padding = True, truncation = True, max_length = 512)
-        X = tokens["input_ids"]
-```
+tokenizer 종류에 따라서, `utils.py` 파일을 수정해야 할 수도 있습니다. tokenizer는 문자열로 구성된 list 형태의 sentences를 입력받아, tensor 형태로 반환합니다.
 
 ## Result
 
@@ -80,14 +71,20 @@ tokenizer 종류에 따라서, `utils.py` `Line 21~23` 부분을 수정해야 �
 
 | Model                    | vocab size | hidden dim | embedding dim | loss rate | temperature |   Acc | Step | Train Time |
 | ------------------------ | ---------: | ---------: | ------------: | --------: | ----------: | ----: | ---: | ---------: |
+| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |         0 |           1 | 87.84 |   30 |   00:49:15 |
 | `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |         0 |           2 | 87.74 |   30 |   00:49:32 |
 | `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |         0 |          10 | 87.74 |   30 |   00:49:26 |
 | **`DistilKoBiLSTM-base`** |  **3000** |    **128** |        **64** | **0.1** | **1** | **88.20** | **30** | **00:50:29** |
-| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.1 |          10 | 87.73 |   30 |   00:49:27 |
+| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.1 |           2 | 87.98 |   30 |   00:46:27 |
+| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.1 |           3 | 88.09 |   30 |   00:46:19 |
+| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.1 |           4 | 87.94 |   30 |   00:46:19 |
+| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.1 |          10 | 87.76 |   30 |   00:46:25 |
 | `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.5 |          10 | 87.92 |   30 |   00:48:51 |
 | `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.9 |          10 | 87.61 |   30 |   00:49:02 |
 | `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.1 |           1 | 86.83 |   30 |   00:44:41 |
 | **`DistilKoBiLSTM-Smail`** | **3000** |     **64** |        **32** | **0.1** | **2** | **87.17** | **30** | **00:44:41** |
+| `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.1 |           3 | 86.91 |   30 |   00:45:07 |
+| `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.1 |           4 | 87.02 |   30 |   00:44:47 |
 | `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.1 |          10 | 86.67 |   30 |   00:44:34 |
 | `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.9 |           1 | 86.76 |   30 |   00:44:40 |
 | `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.9 |          10 | 86.77 |   30 |   00:44:34 |
