@@ -55,41 +55,21 @@ tokenizer 종류에 따라서, `utils.py` 파일을 수정해야 할 수도 있�
 
 | Model                    | Total Parameters | Model Size |   Acc |
 | ------------------------ | ---------------: | ---------: | ----: |
-| `BERT-Large`             |        335174458 |      1.34G |     - |
-| `BERT-Base-Multilingual` |        177974523 |       714M | 87.54 |
-| `KoBERT`                 |         92186880 |       369M | 90.26 |
-| `KoELECTRA-Base-v3`      |        112330752 |       452M | 90.98 |
-| `KoELECTRA-Small-v3`     |         14056192 |      56.6M | 89.90 |
-| `DistilKoBiLSTM-Base`    |           391170 |       1.5M | 88.20 |
-| `DistilKoBiLSTM-Smail`   |           146434 |      547KB | 87.17 |
+| `BERT-Large`             |      335,174,458 |      1.34G |     - |
+| `BERT-Base-Multilingual` |      177,974,523 |       714M | 87.54 |
+| `KoBERT`                 |       92,186,880 |       369M | 90.26 |
+| `KoELECTRA-Base-v3`      |      112,330,752 |       452M | 90.56 |
+| `KoELECTRA-Small-v3`     |       14,056,192 |      56.6M | 89.90 |
+| `DistilKoBiLSTM-Base`    |          391,170 |       1.5M | 88.20 |
+| `DistilKoBiLSTM-Smail`   |          146,434 |      547KB | 87.17 |
+| `KoBiLSTM-Base`          |          391,170 |       1.5M | 87.08 |
+| `KoBiLSTM-Smail`         |          146,434 |      547KB | 85.54 |
 
-- 실험에 사용된 `DistilKoBiLSTM`는 `KoELECTRA-Small-v3`을 Teacher Model로 사용했습니다.
 - `DistilKoBiLSTM-base` 기준 각 모델별 Parameter Size 감축: `BERT-Large` 869배, `BERT-Base-Multilingual` 455배 ,`KoBERT` 235배, `KoELECTRA-Base-v3` 287배, `KoELECTRA-Small-v3` 36배. 엄청난 크기 차이 속에서, 최대 2.78%의 Acc 차이를 보입니다. 오히려 성능이 더 좋은 경우도 있습니다. `DistilKoBiLSTM-smail`의 경우 `DistilKoBiLSTM-base`보다 Acc가 1% 정도 떨어지지만, Parameter Size가 2.67배 더 작습니다.
-
-
-### Hyperparameter and Acc and Train Time
-
-| Model                    | vocab size | hidden dim | embedding dim | loss rate | temperature |   Acc | Step | Train Time |
-| ------------------------ | ---------: | ---------: | ------------: | --------: | ----------: | ----: | ---: | ---------: |
-| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |         0 |           1 | 87.84 |   30 |   00:49:15 |
-| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |         0 |           2 | 87.74 |   30 |   00:49:32 |
-| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |         0 |          10 | 87.74 |   30 |   00:49:26 |
-| **`DistilKoBiLSTM-base`** |  **3000** |    **128** |        **64** | **0.1** | **1** | **88.20** | **30** | **00:50:29** |
-| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.1 |           2 | 87.98 |   30 |   00:46:27 |
-| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.1 |           3 | 88.09 |   30 |   00:46:19 |
-| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.1 |           4 | 87.94 |   30 |   00:46:19 |
-| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.1 |          10 | 87.76 |   30 |   00:46:25 |
-| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.5 |          10 | 87.92 |   30 |   00:48:51 |
-| `DistilKoBiLSTM-base`    |       3000 |        128 |            64 |       0.9 |          10 | 87.61 |   30 |   00:49:02 |
-| `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.1 |           1 | 86.83 |   30 |   00:44:41 |
-| **`DistilKoBiLSTM-Smail`** | **3000** |     **64** |        **32** | **0.1** | **2** | **87.17** | **30** | **00:44:41** |
-| `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.1 |           3 | 86.91 |   30 |   00:45:07 |
-| `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.1 |           4 | 87.02 |   30 |   00:44:47 |
-| `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.1 |          10 | 86.67 |   30 |   00:44:34 |
-| `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.9 |           1 | 86.76 |   30 |   00:44:40 |
-| `DistilKoBiLSTM-Smail`   |       3000 |         64 |            32 |       0.9 |          10 | 86.77 |   30 |   00:44:34 |
-
-
+- 실험에 사용된 `DistilKoBiLSTM`는 `KoELECTRA-Small-v3`을 Teacher Model로 사용했습니다. `KoBiLSTM`은 Distilling 작업은 진행하지 않고, `CrossEntropyLoss`를 사용해 학습한 결과입니다.
+- `BERT` 모델의 Acc는 직접 실험하지 못하고, [범용적인 감정 분석(극성 분석)은 가능할까](https://bab2min.tistory.com/657) 블로그 내용을 통해서 유추한 값입니다.
+- 388만 개의 augmentation dataset을 만들었으나, 아직 `DistilKoBiLSTM` 학습에 사용하지 않았습니다. 따라서, 성능 개선의 여지가 있습니다.
+- `DistilKoBiLSTM`의 Hyperparameter별 성능을 보고 싶으면, [Hyperparameter and Acc and Train Time](https://github.com/gyunggyung/DistilKoBiLSTM/blob/main/Hyperparameter_Acc.md)를 확인해주세요.
 
 ## Todo
 - [ ] Add Relu
@@ -116,6 +96,19 @@ tokenizer 종류에 따라서, `utils.py` 파일을 수정해야 할 수도 있�
 - [ ] KoGPT2
 - [ ] XLNet
 - [ ] T5
+
+### Train Dataset
+- [ ] Only NSMC
+- [ ] Naver NER
+- [ ] PAWS
+- [ ] KorNLI
+- [ ] KorSTS
+- [ ] STS + NLI 
+- [ ] Question Pair
+- [ ] KorQuAD 1.0
+- [ ] KorQuAD 2.0
+- [ ] Korean-Hate-Speech
+- [ ] TyDi QA
 
 ## Reference
 

@@ -10,7 +10,7 @@ from modeling_bilstm import BiLSTM
 
 class Distil_Trainer():
     def __init__(self, input_dim = 8002, hidden_dim = 128, embedding_dim = 64, lstm_num_layers = 1, dropout = 0.3, tokenizer = None,
-                 out_put_dir = "base", teacher_output = None, train_epoch = 5, lr = 0.001, step_size = 1, gamma = 0.9, 
+                 out_put_dir = "base", teacher_output = None, train_epoch = 5, lr = 0.001, step_size = 1, gamma = 0.9, base_lr = 0.001 / 2,
                  scheduler_tpye = "StepLR", loss_rate = 0.5, temperature = 10, loss_option = "kl_div", len_train_iter = None):
         if tokenizer:
             self.tokenizer = tokenizer
@@ -24,7 +24,7 @@ class Distil_Trainer():
         if scheduler_tpye == "StepLR":
             self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size = step_size, gamma = gamma) # step_size = 2
         elif scheduler_tpye == "CyclicLR":
-            self.scheduler = optim.lr_scheduler.CyclicLR(self.optimizer, base_lr = lr / 25, max_lr = lr, 
+            self.scheduler = optim.lr_scheduler.CyclicLR(self.optimizer, base_lr = base_lr, max_lr = lr, 
                                                          step_size_up = len_train_iter // 2, cycle_momentum = False)
         self.criterion = nn.CrossEntropyLoss().to("cuda")
         self.out_put_dir = out_put_dir
@@ -186,7 +186,9 @@ from utils import Dataset, get_teacher_output
 from transformers import BertTokenizerFast
 
 class Main_train():
-    def __init__(self, vocab_size, batch_size, hidden_dim, embedding_dim, loss_rate, temperature, train_epoch, teacher_path):
+    def __init__(self, vocab_size, batch_size, hidden_dim, embedding_dim, loss_rate, temperature, 
+                 train_epoch, teacher_path, out_put_dir = "distil", 
+                 step_size = 5, gamma = 0.9, scheduler_tpye = "StepLR", lr = 0.001, base_lr = 0.001 / 2):
         self.vocab_size = vocab_size
         self.batch_size = batch_size
         self.hidden_dim = hidden_dim
@@ -195,7 +197,11 @@ class Main_train():
         self.temperature = temperature
         self.train_epoch = train_epoch
         self.teacher_path = teacher_path
-
+        self.out_put_dir = out_put_dir
+        self.step_size = step_size
+        self.gamma = gamma
+        self.scheduler_tpye = scheduler_tpye
+        
     def __get_hyperparameter(self):
         vocab_size = self.vocab_size
         batch_size = self.batch_size
@@ -213,6 +219,7 @@ class Main_train():
         tokenizer = BertTokenizerFast(vocab_file = "tokenizer/vocab_size_{}/vocab.txt".format(str(vocab_size)), lowercase=False, strip_accents=False)
         dataset = Dataset(tokenizer, tokenizer_type = "BertTokenizerFast", batch_size = batch_size)
         train_iter, test_iter, valid_iter = dataset.load_data(df)
+        # 데이터 셋 지우는 것도 만들자.
         return train_iter, test_iter, valid_iter, tokenizer
 
     def only_train(self, train_iter, valid_iter, test_iter, tokenizer):
@@ -222,13 +229,14 @@ class Main_train():
         print("loss_rate : ", loss_rate)
         print("temperature: ", temperature)
         distil_trainer = Distil_Trainer(hidden_dim = hidden_dim, embedding_dim = embedding_dim, lstm_num_layers = 1, train_epoch = train_epoch,
-                                        out_put_dir = "distil/vocab_size_{}_loss_rate_{}_temperature_{}/".format(str(vocab_size), str(int(loss_rate * 100)), temperature), tokenizer = tokenizer,
-                                        teacher_output = teacher_output, loss_rate = loss_rate, temperature = temperature)
+                                        out_put_dir = "{}/vocab_size_{}_loss_rate_{}_temperature_{}/".format(self.out_put_dir, str(vocab_size), str(int(loss_rate * 100)), temperature), tokenizer = tokenizer,
+                                        teacher_output = teacher_output, loss_rate = loss_rate, temperature = temperature, step_size = self.step_size, gamma = self.gamma, scheduler_tpye = self.scheduler_tpye)
         distil_trainer.trainer(train_iter, valid_iter, test_iter)
         distil_trainer.tb_writer.flush()
         distil_trainer.tb_writer.close()
 
     def train_list_hyperparameter(self, hyperparameter_list):
+        hyperparameter_list = hyperparameter_list[:8]
         if type(hyperparameter_list[0]) is int:
             vocab_size_list = [hyperparameter_list[0]]
         else:
@@ -269,3 +277,4 @@ class Main_train():
                 return
         train_iter, test_iter, valid_iter, tokenizer = self.load_data()
         self.only_train(train_iter, valid_iter, test_iter, tokenizer)
+        return train_iter, valid_iter, test_iter # 재활용 할 수 있게 
