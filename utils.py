@@ -17,6 +17,10 @@ class Dataset():
         sentences = list(data["document"])
         if data_type == "lstm":
             tokens = self.tokenizer.batch_encode_plus(sentences, return_tensors = "pt", padding = True, truncation = True, max_length = 512)
+            # tokens = []
+            # for i in range(0, len(sentences), batch_size):
+            #     tokens.append(self.tokenizer.batch_encode_plus(sentences[i : i + batch_size], return_tensors = "pt", padding = "max_length", truncation = True, max_length = 512))
+            # tokens = tokens[0]
         else:
             tokens = self.tokenizer(sentences, return_tensors = "pt", padding = True, truncation = True, max_length = 512)
         X = tokens["input_ids"]
