@@ -10,7 +10,7 @@ from modeling_bilstm import BiLSTM
 
 class Distil_Trainer():
     def __init__(self, input_dim = 8002, hidden_dim = 128, embedding_dim = 64, lstm_num_layers = 1, dropout = 0.3, tokenizer = None,
-                 out_put_dir = "base", teacher_output = None, train_epoch = 5, lr = 0.001, step_size = 1, gamma = 0.9, base_lr = 0.001 / 2,
+                 out_put_dir = "base", teacher_output = None, train_epoch = 5, lr = 0.001, step_size = 5, gamma = 0.9, base_lr = 0.001 / 2,
                  scheduler_tpye = "StepLR", loss_rate = 0.5, temperature = 10, loss_option = "kl_div", len_train_iter = None):
         if tokenizer:
             self.tokenizer = tokenizer
