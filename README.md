@@ -60,15 +60,16 @@ tokenizer 종류에 따라서, `utils.py` 파일을 수정해야 할 수도 있�
 | `KoBERT`                 |       92,186,880 |       369M | 90.26 |
 | `KoELECTRA-Base-v3`      |      112,330,752 |       452M | 90.56 |
 | `KoELECTRA-Small-v3`     |       14,056,192 |      56.6M | 89.90 |
-| `DistilKoBiLSTM-Base`    |          391,170 |       1.5M | 89.12 |
-| `DistilKoBiLSTM-Smail`   |          146,434 |      547KB |     - |
+| `DistilKoBiLSTM-Large`   |        1,175,554 |       4.5M | 89.12 |
+| `DistilKoBiLSTM-Base`    |          391,170 |       1.5M | 88.94 |
+| `DistilKoBiLSTM-Smail`   |          146,434 |      547KB | 88.07 |
 | `DistilKoBiLSTM-Mini`    |           52,418 |      208KB | 86.17 |
-| `DistilKoBiLSTM-Tiny`    |           27,394 |      109KB |     - |
+| `DistilKoBiLSTM-Tiny`    |           27,394 |      109KB | 85.71 |
 | `KoBiLSTM-Base`          |          391,170 |       1.5M | 87.79 |
 | `KoBiLSTM-Smail`         |          146,434 |      547KB | 87.51 |
 | `KoBiLSTM-Tiny`          |           27,394 |      109KB | 85.09 |
 
-- `DistilKoBiLSTM-base` 기준 각 모델별 Parameter Size 감축: `BERT-Large` 869배, `BERT-Base-Multilingual` 455배 ,`KoBERT` 235배, `KoELECTRA-Base-v3` 287배, `KoELECTRA-Small-v3` 36배. 엄청난 크기 차이 속에서, 최대 2.78%의 Acc 차이를 보입니다. 오히려 성능이 더 좋은 경우도 있습니다. `DistilKoBiLSTM-smail`의 경우 `DistilKoBiLSTM-base`보다 Acc가 1% 정도 떨어지지만, Parameter Size가 2.67배 더 작습니다.
+- `DistilKoBiLSTM-base` 기준 각 모델별 Parameter Size 감축: `BERT-Large` 869배, `BERT-Base-Multilingual` 455배 ,`KoBERT` 235배, `KoELECTRA-Base-v3` 287배, `KoELECTRA-Small-v3` 36배. 엄청난 크기 차이 속에서, 최대 1.14%의 Acc 차이를 보입니다. 오히려 성능이 더 좋은 경우도 있습니다. `DistilKoBiLSTM-smail`의 경우 `DistilKoBiLSTM-base`보다 Acc가 1% 정도 떨어지지만, Parameter Size가 2.67배 더 작습니다.
 - 실험에 사용된 `DistilKoBiLSTM`는 `KoELECTRA-Small-v3`을 Teacher Model로 사용했습니다. `KoBiLSTM`은 Distilling 작업은 진행하지 않고, `CrossEntropyLoss`를 사용해 학습한 결과입니다.
 - `BERT` 모델의 Acc는 직접 실험하지 못하고, [범용적인 감정 분석(극성 분석)은 가능할까](https://bab2min.tistory.com/657) 블로그 내용을 통해서 유추한 값입니다.
 - 388만 개의 augmentation dataset을 만들었으나, 아직 `DistilKoBiLSTM` 학습에 사용하지 않았습니다. 따라서, 성능 개선의 여지가 있습니다.
