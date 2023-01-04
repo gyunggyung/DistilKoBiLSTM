@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    #sentence{
+      width:500px;
+      height:100px;
+      font-size:20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>문장을 입력하면 문장이 긍정 문장인지, 부정 문장인지 알려드립니다.</h2>
+  <form action="/classify" method="POST">
+    <label for="fname">문장:</label><br>
+    <input type="text" id="sentence" name="sentence" value=""><br>
+    <input type="submit" value="감성 분석">
+  </form> 
+</body>
+</html>
