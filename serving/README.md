@@ -1,8 +1,9 @@
 # serving
-`DistilKoBiLSTM-Base`를 Flask로 Serving합니다. 불필요한 동작을 하지 않기 위해, 입력 문장에 대한 결과를 Caching합니다. Dockerfile을 제공하여 쉽게 이용할 수 있습니다. 정말 최소한의 기능만 사용했습니.
+`DistilKoBiLSTM-Base`를 Flask로 Serving합니다. 불필요한 동작을 하지 않기 위해, 입력 문장에 대한 결과를 Caching합니다. Dockerfile을 제공하여 쉽게 이용할 수 있습니다. 정말 최소한의 기능만 사용했습니다.
 
 ## Use
 ```
+git clone https://github.com/gyunggyung/DistilKoBiLSTM.git
 docker build -t serving DistilKoBiLSTM
 docker run -it --rm -p 8000:8000 serving
 ```
