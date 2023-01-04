@@ -2,4 +2,10 @@ torch==1.6.0
 torchvision==0.7.0
 transformers==3.3.1
 pathlib
-tokenizersa
+tokenizers
+tensorboard
+pandas
+scikit-learn
+prettytable
+flask
+cachelib
